@@ -4,6 +4,12 @@
 **Generated:** 2026-08-11 (bulk Book Dev closeout)  
 **Status:** starter / portfolio boundary
 
+## Current product truth
+
+- A read-only uptime monitor surface using sample endpoint checks.
+- Displays target counts, up/down samples, average uptime, a time-range selector, and a small status table.
+- It is explicitly demo data; no live polling, alerting, backend, or monitoring guarantee is present.
+
 ## Purpose
 
 Portfolio repository under Book Dev. This brief records ownership and the

@@ -1,155 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useState } from "react";
 
-function Shell({
-  title,
-  subtitle,
-  badge = "Portfolio demo · local-only",
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  badge?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-black dark:text-zinc-100">
-      <div className="mx-auto max-w-6xl px-4 py-10">
-        <header className="mb-8">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{badge}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">{title}</h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-600 dark:text-zinc-400">{subtitle}</p>
-        </header>
-        {children}
-        <footer className="mt-10 border-t border-zinc-200 pt-4 text-xs text-zinc-500 dark:border-zinc-800">
-          Honest demo: no multi-tenant backend. State (if any) stays in this browser.
-        </footer>
-      </div>
-    </div>
-  );
-}
-
-function Button({
-  children,
-  onClick,
-  variant = "primary",
-  disabled,
-  type = "button",
-  className = "",
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-  variant?: "primary" | "secondary" | "ghost" | "danger";
-  disabled?: boolean;
-  type?: "button" | "submit";
-  className?: string;
-}) {
-  const base =
-    "inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium transition disabled:opacity-50 " +
-    className;
-  const styles =
-    variant === "primary"
-      ? "bg-zinc-900 text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900"
-      : variant === "secondary"
-        ? "bg-white text-zinc-900 ring-1 ring-zinc-200 hover:bg-zinc-100 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-zinc-700"
-        : variant === "danger"
-          ? "bg-red-600 text-white hover:bg-red-500"
-          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-900";
-  return (
-    <button type={type} disabled={disabled} onClick={onClick} className={`${base} ${styles}`}>
-      {children}
-    </button>
-  );
-}
-
-const inputClass =
-  "w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm outline-none ring-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950";
-
-function useLocalStorage<T>(key: string, initial: T) {
-  const [value, setValue] = useState<T>(initial);
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      if (raw != null) setValue(JSON.parse(raw) as T);
-    } catch {
-      /* ignore */
-    }
-    setReady(true);
-  }, [key]);
-  useEffect(() => {
-    if (!ready) return;
-    localStorage.setItem(key, JSON.stringify(value));
-  }, [key, value, ready]);
-  return [value, setValue] as const;
-}
-
-function uid() {
-  return crypto.randomUUID();
-}
-
-async function copyText(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-
-const CARDS = [{"label": "Targets", "value": "6", "hint": "demo"}, {"label": "Up", "value": "5", "hint": "demo"}, {"label": "Down", "value": "1", "hint": "demo"}, {"label": "Avg uptime", "value": "99.2%", "hint": "sample"}];
-const ROWS = [{"name": "bookchaowalit.com", "value": "200 · 120ms", "status": "up"}, {"name": "api.example", "value": "timeout", "status": "down"}];
+const METRICS = [["Targets", "6", "sample scope"], ["Up", "5", "responding"], ["Down", "1", "needs a look"], ["Avg uptime", "99.2%", "sample window"]];
+const ROWS = [{ name: "bookchaowalit.com", value: "200 · 120ms", status: "up", note: "responded" }, { name: "api.example", value: "timeout", status: "down", note: "no response" }];
 
 export default function Home() {
   const [range, setRange] = useState("7d");
-  return (
-    <Shell title="Uptime Monitor" subtitle="Monitored endpoints with sample checks." badge="Demo metrics · sample data">
-      <div className="mb-4 flex gap-2">
-        {["24h", "7d", "30d"].map((r) => (
-          <Button key={r} variant={range === r ? "primary" : "secondary"} onClick={() => setRange(r)}>
-            {r}
-          </Button>
-        ))}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {CARDS.map((c: { label: string; value: string; hint: string }) => (
-          <div key={c.label} className="rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="text-xs text-zinc-500">{c.label}</div>
-            <div className="mt-1 text-2xl font-semibold tabular-nums">{c.value}</div>
-            <div className="mt-1 text-xs text-zinc-500">{c.hint} · {range}</div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-6 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
-        <table className="min-w-full text-sm">
-          <thead className="bg-zinc-100 dark:bg-zinc-900">
-            <tr>
-              <th className="px-3 py-2 text-left font-medium">Name</th>
-              <th className="px-3 py-2 text-left font-medium">Value</th>
-              <th className="px-3 py-2 text-left font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ROWS.map((r: { name: string; value: string; status: string }) => (
-              <tr key={r.name} className="border-t border-zinc-100 dark:border-zinc-900">
-                <td className="px-3 py-2">{r.name}</td>
-                <td className="px-3 py-2 font-mono tabular-nums">{r.value}</td>
-                <td className="px-3 py-2">
-                  <span className={`rounded-full px-2 py-0.5 text-xs ${
-                    r.status === "ok" || r.status === "up"
-                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
-                      : r.status === "warn"
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-red-100 text-red-800"
-                  }`}>{r.status}</span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Shell>
-  );
+  return <main className="signal-room">
+    <header className="signal-bar"><div className="signal-mark">B/09</div><div className="signal-name"><strong>SIGNAL WATCH</strong><span>ENDPOINT STATUS / SAMPLE BOARD</span></div><div className="signal-state"><i /> SAMPLE DATA · READ ONLY</div></header>
+    <section className="signal-hero"><div><p className="signal-kicker">BOOKCHAOWALIT / OBSERVATORY LOG</p><h1>Watch the<br /><em>signal.</em></h1><p className="hero-copy">A quiet readout for whether a few important endpoints answer when called.</p></div><div className="beacon" aria-label="Sample beacon"><span className="beacon-beam" /><div className="beacon-tower"><i /><i /><i /></div><small>NOT LIVE<br />DEMO ONLY</small></div></section>
+    <section className="signal-console" aria-label="Uptime monitor sample"><div className="console-top"><div><span className="signal-kicker">WATCH WINDOW</span><h2>How the line looked.</h2></div><div className="range-tabs" role="group" aria-label="Sample range">{["24h", "7d", "30d"].map((option) => <button key={option} className={range === option ? "active" : ""} onClick={() => setRange(option)}>{option}</button>)}</div></div>
+      <div className="metric-row">{METRICS.map(([label, value, note]) => <div className="metric-cell" key={label}><span>{label}</span><strong>{value}</strong><small>{note} · {range}</small></div>)}</div>
+      <div className="log-heading"><span>ENDPOINT LOG</span><span>{range} / SYNTHETIC CHECKS</span></div>
+      <div className="endpoint-log">{ROWS.map((row, index) => <div className="endpoint-row" key={row.name}><span className="endpoint-number">{String(index + 1).padStart(2, "0")}</span><div className="endpoint-name"><strong>{row.name}</strong><span>{row.note}</span></div><b className="endpoint-value">{row.value}</b><span className={`endpoint-status ${row.status}`}>{row.status}</span></div>)}</div>
+      <p className="honesty-note"><i /> The monitor is a visual sample only. No remote check is running behind this screen.</p>
+    </section>
+    <footer className="signal-footer"><span>BOOKCHAOWALIT / UPTIME MONITOR</span><span>SAMPLE METRICS · NO ALERT CHANNEL</span></footer>
+  </main>;
 }
